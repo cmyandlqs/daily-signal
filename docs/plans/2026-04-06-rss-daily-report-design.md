@@ -113,7 +113,7 @@ S = 0.35 * keyword_score
 - recency_score：指数衰减，越新越高
 - 低于阈值（默认 0.3）跳过，剩余按 S 降序
 
-### 4. 语义复筛（semantic_filter，可选）
+### 4. 语义复筛（semantic_filter，可选，默认不加）
 
 - 调用 embedding API（如 bge-m3）计算「内容 vs 用户主题描述」余弦相似度
 - 相似度低于阈值（默认 0.4）剔除

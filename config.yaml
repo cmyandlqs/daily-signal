@@ -1,0 +1,152 @@
+schedule:
+  timezone: "Asia/Shanghai"
+  slots:
+    - name: "AM"
+      time: "08:00"
+    - name: "PM"
+      time: "17:00"
+  compensate_on_startup: true
+
+sources:
+  - name: "知乎热榜"
+    platform: "zhihu"
+    rss_url: "https://plink.anyfeeder.com/zhihu/hotlist"
+    enabled: false # temp disabled: availability test returned 503
+    source_weight: 0.8
+  - name: "知乎每日精选"
+    platform: "zhihu"
+    rss_url: "https://www.zhihu.com/rss"
+    enabled: true
+    source_weight: 0.75
+  - name: "GitHub Trending"
+    platform: "github"
+    rss_url: "https://rsshub.app/github/trending/daily"
+    enabled: false # temp disabled: rsshub.app returned 403
+    source_weight: 0.9
+  - name: "掘金趋势周榜"
+    platform: "juejin"
+    rss_url: "https://rsshub.app/juejin/trending/all/weekly"
+    enabled: false # temp disabled: rsshub.app returned 403
+    source_weight: 0.8
+  - name: "微博热搜"
+    platform: "weibo"
+    rss_url: "https://rsshub.app/weibo/search/hot"
+    enabled: false # temp disabled: rsshub.app returned 403
+    source_weight: 0.8
+  - name: "微软研究院AI"
+    platform: "weixin"
+    rss_url: "https://plink.anyfeeder.com/weixin/MSRAsia"
+    enabled: true
+    source_weight: 0.85
+  - name: "OpenAI 博客"
+    platform: "openai"
+    rss_url: "https://openai.com/news/rss.xml"
+    enabled: true
+    source_weight: 0.9
+  - name: "Google DeepMind"
+    platform: "deepmind"
+    rss_url: "https://deepmind.google/blog/rss.xml"
+    enabled: true
+    source_weight: 0.9
+  - name: "Google AI Blog"
+    platform: "google_ai"
+    rss_url: "https://blog.google/technology/ai/rss/"
+    enabled: true
+    source_weight: 0.85
+  - name: "arXiv AI"
+    platform: "arxiv"
+    rss_url: "https://rss.arxiv.org/rss/cs.AI"
+    enabled: true
+    source_weight: 0.9
+  - name: "arXiv 机器学习"
+    platform: "arxiv"
+    rss_url: "https://rss.arxiv.org/rss/cs.LG"
+    enabled: true
+    source_weight: 0.9
+  - name: "arXiv NLP"
+    platform: "arxiv"
+    rss_url: "https://rss.arxiv.org/rss/cs.CL"
+    enabled: true
+    source_weight: 0.9
+  - name: "arXiv 计算机视觉"
+    platform: "arxiv"
+    rss_url: "https://rss.arxiv.org/rss/cs.CV"
+    enabled: true
+    source_weight: 0.9
+  - name: "Hacker News AI"
+    platform: "hackernews"
+    rss_url: "https://hnrss.org/newest?q=AI"
+    enabled: true
+    source_weight: 0.8
+  - name: "Hacker News LLM"
+    platform: "hackernews"
+    rss_url: "https://hnrss.org/newest?q=LLM"
+    enabled: true
+    source_weight: 0.8
+  - name: "Hacker News OpenClaw"
+    platform: "hackernews"
+    rss_url: "https://hnrss.org/newest?q=OpenClaw"
+    enabled: true
+    source_weight: 0.75
+  - name: "Hugging Face 博客"
+    platform: "huggingface"
+    rss_url: "https://huggingface.co/blog/feed.xml"
+    enabled: true
+    source_weight: 0.9
+  - name: "Stability AI"
+    platform: "stability"
+    rss_url: "https://stability.ai/news?format=rss"
+    enabled: false # temp disabled: feed parser failed
+    source_weight: 0.85
+  - name: "OpenClaw Releases"
+    platform: "github"
+    rss_url: "https://github.com/openclaw/openclaw/releases.atom"
+    enabled: true
+    source_weight: 0.8
+  - name: "OpenClaw Commits"
+    platform: "github"
+    rss_url: "https://github.com/openclaw/openclaw/commits/main.atom"
+    enabled: true
+    source_weight: 0.8
+  - name: "机器之心"
+    platform: "jiqizhixin"
+    rss_url: "https://www.jiqizhixin.com/rss"
+    enabled: false # temp disabled: malformed xml
+    source_weight: 0.85
+  - name: "Simon Willison's Blog"
+    platform: "blog"
+    rss_url: "https://simonwillison.net/atom/everything/"
+    enabled: true
+    source_weight: 0.85
+
+filters:
+  blacklist_keywords: ["广告", "推广"]
+  blacklist_domains: []
+  include_keywords: ["llm","强化学习","RL","agent"]
+  min_content_length: 20
+  score_threshold: 0.2
+  semantic_filter:
+    enabled: false
+    similarity_threshold: 0.4
+
+summarizer:
+  enabled: true
+  provider: "qwen_openai"
+  api_key: "${DASHSCOPE_API_KEY}"
+  model: "qwen3.5-flash"
+  base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+  request_timeout_seconds: 100
+  top_n: 30
+  max_tokens: 500
+
+push:
+  enabled: false
+  provider: "serverchan"
+  serverchan_key: ""
+  pushplus_token: ""
+  top_n: 5
+
+output:
+  dir: "./output"
+
+database_url: "sqlite:///./data/daily_signal.db"

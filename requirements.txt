@@ -1,0 +1,10 @@
+﻿fastapi
+uvicorn
+sqlalchemy
+apscheduler
+feedparser
+jinja2
+pydantic
+python-dotenv
+PyYAML
+httpx

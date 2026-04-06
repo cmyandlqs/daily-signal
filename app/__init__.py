@@ -1,0 +1,2 @@
+"""daily-signal application package."""
+
