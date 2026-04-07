@@ -1,5 +1,7 @@
 # daily-signal
 
+[English](./README_EN.md) | 简体中文
+
 一个本地定时信息简报工具：抓取多源 RSS/Atom，筛选后生成 Markdown 日报（AM/PM 双文件）。
 
 ## 功能
