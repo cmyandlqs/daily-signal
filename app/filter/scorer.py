@@ -44,3 +44,17 @@ def score_entries(
     scored.sort(key=lambda x: x.score, reverse=True)
     return scored
 
+
+def cap_entries_per_source(entries: list[Entry], max_items_per_source: int) -> list[Entry]:
+    if max_items_per_source <= 0:
+        return entries
+
+    kept: list[Entry] = []
+    source_counter: dict[int, int] = {}
+    for entry in entries:
+        count = source_counter.get(entry.source_id, 0)
+        if count >= max_items_per_source:
+            continue
+        kept.append(entry)
+        source_counter[entry.source_id] = count + 1
+    return kept

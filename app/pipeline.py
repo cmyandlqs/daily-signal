@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -12,7 +13,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.config import AppConfig, SourceConfig
 from app.fetcher.rss_client import fetch_rss
 from app.filter.hard_filter import apply_hard_filter, make_title_fingerprint
-from app.filter.scorer import score_entries
+from app.filter.scorer import cap_entries_per_source, score_entries
 from app.generator.markdown_builder import build_markdown_report
 from app.models import Entry, Report, Source
 from app.summarizer.fallback import FallbackSummarizer
@@ -85,6 +86,12 @@ def run_pipeline(
     slot: str,
     force: bool = False,
 ) -> PipelineResult:
+    def _summarize_one(entry: Entry) -> tuple[int, object, Exception | None]:
+        try:
+            return (entry.id, summarizer.summarize(entry), None)
+        except Exception as exc:
+            return (entry.id, None, exc)
+
     tz = ZoneInfo(cfg.schedule.timezone)
     now_local = datetime.now(tz)
     date_str = now_local.strftime("%Y-%m-%d")
@@ -165,6 +172,7 @@ def run_pipeline(
             filter_cfg=cfg.filters,
             now=datetime.utcnow(),
         )
+        scored = cap_entries_per_source(scored, cfg.filters.max_items_per_source)
 
         if cfg.summarizer.enabled and cfg.summarizer.provider == "qwen_openai":
             try:
@@ -175,21 +183,28 @@ def run_pipeline(
         else:
             summarizer = FallbackSummarizer()
         summary_fail_count = 0
-        for entry in scored[: cfg.summarizer.top_n]:
-            try:
-                summary = summarizer.summarize(entry)
-                entry.one_liner = summary.one_liner
-                entry.bullets_json = json.dumps(summary.bullets, ensure_ascii=False)
-                entry.why_it_matters = summary.why_it_matters
-                entry.tags_json = json.dumps(summary.tags, ensure_ascii=False)
-                entry.status = "summarized"
-            except Exception:
-                summary_fail_count += 1
-                entry.one_liner = (entry.content_raw or "")[:100]
-                entry.bullets_json = json.dumps([entry.one_liner], ensure_ascii=False)
-                entry.why_it_matters = "信息不足"
-                entry.tags_json = "[]"
-                entry.status = "summarized"
+        llm_candidates = scored[: cfg.summarizer.top_n]
+        by_id = {e.id: e for e in llm_candidates}
+        workers = max(1, int(cfg.summarizer.max_concurrency))
+
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            futures = [pool.submit(_summarize_one, entry) for entry in llm_candidates]
+            for future in as_completed(futures):
+                entry_id, summary_obj, err = future.result()
+                entry = by_id[entry_id]
+                if err is None:
+                    entry.one_liner = summary_obj.one_liner
+                    entry.bullets_json = json.dumps(summary_obj.bullets, ensure_ascii=False)
+                    entry.why_it_matters = summary_obj.why_it_matters
+                    entry.tags_json = json.dumps(summary_obj.tags, ensure_ascii=False)
+                    entry.status = "summarized"
+                else:
+                    summary_fail_count += 1
+                    entry.one_liner = (entry.content_raw or "")[:100]
+                    entry.bullets_json = json.dumps([entry.one_liner], ensure_ascii=False)
+                    entry.why_it_matters = "信息不足"
+                    entry.tags_json = "[]"
+                    entry.status = "summarized"
 
         report_path = build_markdown_report(scored, cfg.output.dir, date_str, slot)
         report.file_path = report_path

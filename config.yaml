@@ -122,9 +122,41 @@ sources:
 filters:
   blacklist_keywords: ["广告", "推广"]
   blacklist_domains: []
-  include_keywords: ["llm","强化学习","RL","agent"]
+  include_keywords:
+    - "llm"
+    - "LLM"
+    - "large language model"
+    - "large language models"
+    - "大语言模型"
+    - "agent"
+    - "Agent"
+    - "智能体"
+    - "强化学习"
+    - "reinforcement learning"
+    - "RL"
+    - "rl"
+    - "policy gradient"
+    - "策略梯度"
+    - "openai"
+    - "OpenAI"
+    - "chatgpt"
+    - "ChatGPT"
+    - "deepseek"
+    - "DeepSeek"
+    - "qwen"
+    - "Qwen"
+    - "通义千问"
+    - "claude"
+    - "Claude"
+    - "anthropic"
+    - "Anthropic"
+    - "kimi"
+    - "Kimi"
+    - "moonshot"
+    - "Moonshot"
   min_content_length: 20
   score_threshold: 0.2
+  max_items_per_source: 5
   semantic_filter:
     enabled: false
     similarity_threshold: 0.4
@@ -138,6 +170,7 @@ summarizer:
   request_timeout_seconds: 100
   top_n: 30
   max_tokens: 500
+  max_concurrency: 10
 
 push:
   enabled: false

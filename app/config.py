@@ -41,6 +41,7 @@ class FilterConfig(BaseModel):
     include_keywords: list[str] = Field(default_factory=list)
     min_content_length: int = 50
     score_threshold: float = 0.3
+    max_items_per_source: int = 5
     semantic_filter: SemanticFilterConfig = Field(default_factory=SemanticFilterConfig)
 
 
@@ -53,6 +54,7 @@ class SummarizerConfig(BaseModel):
     request_timeout_seconds: int = 30
     top_n: int = 30
     max_tokens: int = 500
+    max_concurrency: int = 10
 
 
 class PushConfig(BaseModel):
